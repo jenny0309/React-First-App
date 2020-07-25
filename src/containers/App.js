@@ -19,7 +19,8 @@ class App extends React.Component {
       { id: 'key3', name: "Shane", age: 26 }
     ],
     otherState: "Some other state",
-    showPersons: false
+    showPersons: false,
+    showCockpit: true
   }
 
   static getDevivedStateFromProps(props, state) {
@@ -105,12 +106,19 @@ class App extends React.Component {
 
     return (
       <div className={classes.App}>
-          <Cockpit 
-            title={this.props.appTitle}
-            showPersons={this.state.showPersons} 
-            persons={this.state.persons} 
-            clicked={this.togglePersonsHandler} />
-          {persons} {/* show the contents of the variable */}
+        <button onClick={() => {
+          this.setState({ showCockpit: false });
+        }}>
+          Remove Cockpit
+        </button>
+        {this.state.showCockpit ? <Cockpit 
+          title={this.props.appTitle}
+          showPersons={this.state.showPersons} 
+          persons={this.state.persons}
+          personsLength={this.state.persons.length}
+          clicked={this.togglePersonsHandler} 
+        /> : null}
+        {persons} {/* show the contents of the variable */}
       </div>
     );
   }

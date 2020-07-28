@@ -3,7 +3,10 @@ import React from "react";
 import classes from "./App.css"; // allow to make unique class name on CSS automatically
 import Persons from "../components/Persons/Persons";
 // import ErrorBoundary from "../components/ErrorBoundary/ErrorBoundary";
-import Cockpit from "../components/Cockpit/Cockpit"
+import Cockpit from "../components/Cockpit/Cockpit";
+import withClass from "../hoc/withClass";
+import Auxiliary from "../hoc/Auxiliary";
+import AuthContext from "../context/auth-context"
 
 class App extends React.Component {
   // initialisation with constructor
@@ -14,13 +17,15 @@ class App extends React.Component {
 
   state = {
     persons: [
-      { id: 'key1', name: "Cavin", age: 28 },
+      { id: 'key1', name: "Cavin", age: 28 }, // if age has string value, the console shows an error message! <- PropTyles in Person.js
       { id: 'key2', name: "Katy", age: 29 },
       { id: 'key3', name: "Shane", age: 26 }
     ],
     otherState: "Some other state",
     showPersons: false,
-    showCockpit: true
+    showCockpit: true, 
+    changeCounter: 0,
+    authenticated: false
   }
 
   static getDevivedStateFromProps(props, state) {
@@ -76,8 +81,13 @@ class App extends React.Component {
     const persons = [...this.state.persons];
     persons[personIndex] = person;
 
-    this.setState({
-      persons: persons});
+    // use function form to prevent the immediate change of changeCounter!
+    this.setState((prevState, props) => {
+      return {
+        persons: persons, 
+        changeCounter: prevState.changeCounter + 1
+      };
+    });
   }
 
   deletePersonHandler = (personIndex) => {
@@ -92,6 +102,10 @@ class App extends React.Component {
     this.setState({showPersons: !doesShow}); // setState(): adjust state
   }
 
+  loginHandler = () => {
+    this.setState({authenticated: true});
+  };
+
   render() {
     console.log('[App.js] render');
     let persons = null;
@@ -101,28 +115,35 @@ class App extends React.Component {
       persons = <Persons 
             persons={this.state.persons}
             clicked={this.deletePersonHandler}
-            changed={this.nameChangedHandler} />;
+            changed={this.nameChangedHandler}
+            isAuthenticated={this.state.authenticated} />;
     }
 
     return (
-      <div className={classes.App}>
+      <Auxiliary>
         <button onClick={() => {
           this.setState({ showCockpit: false });
         }}>
           Remove Cockpit
         </button>
-        {this.state.showCockpit ? <Cockpit 
-          title={this.props.appTitle}
-          showPersons={this.state.showPersons} 
-          persons={this.state.persons}
-          personsLength={this.state.persons.length}
-          clicked={this.togglePersonsHandler} 
-        /> : null}
-        {persons} {/* show the contents of the variable */}
-      </div>
+        <AuthContext.Provider value={{
+          authenticated: this.state.authenticated, 
+          login: this.loginHandler}}
+        >
+          {this.state.showCockpit ? 
+            <Cockpit 
+              title={this.props.appTitle}
+              showPersons={this.state.showPersons} 
+              persons={this.state.persons}
+              personsLength={this.state.persons.length}
+              clicked={this.togglePersonsHandler} 
+            /> : null}
+          {persons} {/* show the contents of the variable */}
+        </AuthContext.Provider>
+      </Auxiliary>
     );
   }
 }
 
 // export default Radium(App); // higher order component
-export default App;
+export default withClass(App, classes.App);
